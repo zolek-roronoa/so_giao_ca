@@ -50,8 +50,22 @@ dialog input,dialog textarea,dialog select{width:100%}textarea{min-height:64px}
 .k-imp{border-left:4px solid var(--er)}.k-ck{border-left:4px solid var(--bl)}.k-tk{border-left:4px solid var(--ok)}.k-note{border-left:4px solid var(--bd)}.ss{font-size:12px;padding:2px 6px}
 </style></head><body><div id="app"><p class="mu">Đang tải…</p></div><dialog id="m"></dialog>
 <script>
-const SUPABASE_URL='https://zzwtvelkrttmjrqbqrtt.supabase.co',SUPABASE_ANON_KEY='sb_publishable_32e9-mBiKQ_xPT4kZRV6zw_22curM7e';
-const CFG=!SUPABASE_URL.startsWith('PASTE'),sb=CFG?window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY):null;
+const SUPABASE_URL='https://zzwtvelkrttmjrqbqrtt.supabase.co/rest/v1/',SUPABASE_ANON_KEY='sb_publishable_32e9-mBiKQ_xPT4kZRV6zw_22curM7e';
+const URL_N=SUPABASE_URL.trim().replace(/\/(rest|auth)\/v1.*$/,'').replace(/\/+$/,''),KEY_N=SUPABASE_ANON_KEY.trim().replace(/^['"]|['"]$/g,'');
+const CFG=!SUPABASE_URL.startsWith('PASTE')&&!!window.supabase,sb=CFG?window.supabase.createClient(URL_N,KEY_N):null;
+function viErr(m){m=String(m||'');
+ if(/schema cache|does not exist|relation/i.test(m))return'Chưa tạo bảng dữ liệu. Hãy chạy file schema.sql trong SQL Editor của Supabase.';
+ if(/row-level security|permission denied/i.test(m))return'Bị chặn bởi phân quyền dữ liệu. Hãy chạy lại toàn bộ schema.sql.';
+ if(/rate limit/i.test(m))return'Supabase đang giới hạn số email gửi (do bật Confirm email). Tắt Confirm email trong Authentication → Providers → Email, rồi thử lại sau vài phút.';
+ if(/invalid api key|apikey/i.test(m))return'Sai SUPABASE_ANON_KEY. Kiểm tra lại khóa anon/publishable trong index.html.';
+ if(/failed to fetch|networkerror|load failed/i.test(m))return'Không kết nối được Supabase. Kiểm tra SUPABASE_URL (dạng https://xxxx.supabase.co) và mạng.';
+ if(/signups? not allowed|signup.*disabled/i.test(m))return'Supabase đang tắt đăng ký. Bật “Allow new users to sign up” trong Authentication.';
+ if(/invalid.*email|email.*invalid/i.test(m))return'Email không hợp lệ hoặc bị Supabase từ chối. Hãy dùng email thật.';
+ if(/at least 6|weak/i.test(m))return'Mật khẩu cần tối thiểu 6 ký tự.';
+ if(/already (been )?registered/i.test(m))return'Email này đã đăng ký. Hãy bấm Quay lại đăng nhập.';
+ if(/not confirmed/i.test(m))return'Email chưa được xác nhận. Tắt Confirm email trong Supabase hoặc bấm link trong email.';
+ if(/invalid login/i.test(m))return'Sai email hoặc mật khẩu.';
+ return m}
 const chk=r=>{if(r.error)throw r.error;return r};
 const claude={use:async n=>{
  if(!CFG)return null;
@@ -69,13 +83,15 @@ const claude={use:async n=>{
    delete:async()=>chk(await sb.from('docs').delete().eq('coll',c).eq('id',id))})})};
  return null}};
 var signup=false;
-function showLogin(){$('#app').innerHTML=!CFG?'<div class="card"><h3>Chưa cấu hình Supabase</h3><p>Mở file index.html, điền <b>SUPABASE_URL</b> và <b>SUPABASE_ANON_KEY</b> ở đầu phần script.</p></div>':`<div class="card" style="max-width:380px;margin:40px auto"><h1>📒 Sổ Giao Ca – SPA tại CXR</h1><div id="nmw" style="display:none"><label>Họ tên</label><input id="ln"></div><label>Email</label><input id="le" type="email"><label>Mật khẩu</label><input id="lp" type="password"><div class="row" style="margin-top:12px"><button class="pr" id="ab" onclick="doAuth()">Đăng nhập</button><button id="sw" onclick="swAuth()">Tạo tài khoản</button></div><div id="lm" class="dg" style="margin-top:8px"></div></div>`}
+function chpw(){const p=prompt('Mật khẩu mới (tối thiểu 6 ký tự):');if(!p)return;sb.auth.updateUser({password:p}).then(x=>alert(x.error?viErr(x.error.message):'Đã đổi mật khẩu.'))}
+function showLogin(){$('#app').innerHTML=!window.supabase?'<div class="card"><h3>Không tải được thư viện Supabase</h3><p>Kiểm tra kết nối mạng hoặc tường lửa đang chặn cdn.jsdelivr.net.</p></div>':!CFG?'<div class="card"><h3>Chưa cấu hình Supabase</h3><p>Mở file index.html, điền <b>SUPABASE_URL</b> và <b>SUPABASE_ANON_KEY</b> ở đầu phần script.</p></div>':`<div class="card" style="max-width:380px;margin:40px auto"><h1>📒 Sổ Giao Ca – SPA tại CXR</h1><label>Tên đăng nhập</label><input id="le" type="text" autocomplete="username" autocapitalize="none"><label>Mật khẩu</label><input id="lp" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doAuth()"><div class="row" style="margin-top:12px"><button class="pr" id="ab" onclick="doAuth()">Đăng nhập</button></div><div id="lm" class="dg" style="margin-top:8px"></div><div class="mu" style="margin-top:8px;font-size:12px">Kết nối: ${esc(URL_N.replace('https://',''))}</div></div>`}
 function swAuth(){signup=!signup;$('#nmw').style.display=signup?'block':'none';$('#sw').textContent=signup?'Quay lại đăng nhập':'Tạo tài khoản';$('#ab').textContent=signup?'Đăng ký':'Đăng nhập'}
-async function doAuth(){const e=$('#le').value.trim(),p=$('#lp').value,m=$('#lm');m.textContent='';
- const x=signup?await sb.auth.signUp({email:e,password:p,options:{data:{name:$('#ln').value.trim()||e}}}):await sb.auth.signInWithPassword({email:e,password:p});
- if(x.error){m.textContent=x.error.message;return}
- if(signup&&!x.data.session){m.textContent='Đã tạo tài khoản. Hãy kiểm tra email để xác nhận, rồi đăng nhập.';return}
- location.reload()}
+async function doAuth(){const e0=$('#le').value.trim().toLowerCase(),e=e0.includes('@')?e0:e0+'@sogiaoca.app',p=$('#lp').value,m=$('#lm');m.textContent='';
+ if(!e0||!p){m.textContent='Nhập tên đăng nhập và mật khẩu.';return}
+ try{const x=signup?await sb.auth.signUp({email:e,password:p,options:{data:{name:$('#ln').value.trim()||e}}}):await sb.auth.signInWithPassword({email:e,password:p});
+ if(x.error){m.innerHTML=esc(viErr(x.error.message))+'<div class="mu" style="font-size:12px">Chi tiết: '+esc(x.error.message)+'</div>';return}
+ if(signup&&!x.data.session){m.textContent='Đã tạo tài khoản. Nếu không vào được, hãy kiểm tra email để xác nhận (hoặc tắt Confirm email trong Supabase), rồi đăng nhập.';return}
+ location.reload()}catch(err){m.textContent=viErr(err.message)}}
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const p2=n=>String(n).padStart(2,'0'),ymd=d=>d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
 const vn=s=>s?s.split('-').reverse().join('/'):'';
@@ -96,13 +112,13 @@ const nm=id=>names[id]||members[id]?.name||'…',isAdm=()=>members[meId]?.role==
  user=await claude.use('user');db=await claude.use('db');
  if(!user||!db){showLogin();return}
  meId=await user.id();
- db.collection('members').onSnapshot(s=>{members={};s.docs.forEach(d=>members[d.id]=d.data());L.m=1;onMem()},e=>$('#app').textContent='Lỗi: '+e.message);
+ db.collection('members').onSnapshot(s=>{members={};s.docs.forEach(d=>members[d.id]=d.data());L.m=1;onMem()},e=>$('#app').innerHTML='<div class="card"><h3>Lỗi dữ liệu</h3><p>'+esc(viErr(e.message))+'</p><div class="mu">Chi tiết: '+esc(e.message)+'</div></div>');
  db.collection('roles').onSnapshot(s=>{roles={};s.docs.forEach(d=>roles[d.id]=d.data());render();if(mode==='users')usersView();if(mode==='roles')rolesView()});
  db.collection('requests').onSnapshot(s=>{requests={};s.docs.forEach(d=>requests[d.id]=d.data());render();if(mode==='users')usersView()});
  db.collection('items').onSnapshot(s=>{items=s.docs.map(d=>({id:d.id,...d.data()}));L.i=1;render()});
 })();
 async function onMem(){
- if(!Object.keys(members).length&&!boot&&await user.isOwner()){boot=1;await db.collection('members').doc(meId).set({role:'admin',name:(await user.me()).name,at:Date.now()});return}
+ if(!Object.keys(members).length&&!boot&&await user.isOwner()){boot=1;try{await db.collection('members').doc(meId).set({role:'admin',name:(await user.me()).name,at:Date.now()})}catch(e){$('#app').innerHTML='<div class="card"><h3>Không tạo được Admin đầu tiên</h3><p>'+esc(viErr(e.message))+'</p><div class="mu">Chi tiết: '+esc(e.message)+'</div></div>'}return}
  render();if(mode==='users')usersView();
 }
 function need(){const ids=new Set([meId,...Object.keys(members),...items.map(i=>i.asg),...items.map(i=>i.by)]);return[...ids].filter(i=>i&&!names[i])}
@@ -121,7 +137,7 @@ function render(){
  const di=items.filter(i=>i.date===day),cnt=t=>di.filter(i=>i.type===t).length,ni=di.filter(i=>i.imp).length,
  list=di.filter(i=>flt==='all'||(flt==='imp'?i.imp:i.type===flt)).sort((a,b)=>(!!b.imp-!!a.imp)||a.at-b.at),dd=new Date(day+'T00:00:00'),w=can('write');
  app.innerHTML=`<div class="top"><div><h1>📒 Sổ Giao Ca – SPA tại CXR</h1><div class="mu">${esc(nm(meId))} · ${esc(rname(members[meId].role))}</div></div>
- <div class="row"><button onclick="sb.auth.signOut().then(()=>location.reload())">Đăng xuất</button>${can('export')?'<button onclick="exportXls()">⬇ Excel tháng</button>':''}${can('users')||can('roles')?`<button onclick="openUsers()">👥 Người dùng${can('users')&&Object.keys(requests).some(id=>!members[id])?' ('+Object.keys(requests).filter(id=>!members[id]).length+' chờ duyệt)':''}</button>`:''}</div></div>
+ <div class="row"><button onclick="chpw()">🔑 Đổi mật khẩu</button><button onclick="sb.auth.signOut().then(()=>location.reload())">Đăng xuất</button>${can('export')?'<button onclick="exportXls()">⬇ Excel tháng</button>':''}${can('users')||can('roles')?`<button onclick="openUsers()">👥 Người dùng${can('users')&&Object.keys(requests).some(id=>!members[id])?' ('+Object.keys(requests).filter(id=>!members[id]).length+' chờ duyệt)':''}</button>`:''}</div></div>
  <div class="lay"><div class="left"><div class="card"><div class="top" style="margin:0 0 8px"><div class="row"><button onclick="mv(-1)">‹</button><b>Tháng ${M}/${Y}</b><button onclick="mv(1)">›</button></div><button onclick="pick(today())">Hôm nay</button></div>
  <div class="cal">${g}</div><div class="mu" style="margin-top:8px;font-size:12px">Số trên ô: <b style="color:#7a8599">lưu ý</b> · <b style="color:var(--bl)">check-in</b> · <b style="color:var(--ok)">triển khai</b> · <b style="color:var(--er)">hồng = có mục quan trọng</b></div></div></div>
  <div><div class="card"><div class="top" style="margin:0 0 10px"><h2>${WD[dd.getDay()]}, ${vn(day)}</h2>${w?`<div class="row"><button class="pr" onclick="openForm('note')">＋ Thêm ghi chú</button><button onclick="openForm('checkin')">＋ Check-in</button><button onclick="openForm('task')">＋ Triển khai</button></div>`:''}</div>
