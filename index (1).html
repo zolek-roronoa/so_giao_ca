@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="utf-8"><title>Sổ Giao Ca – SPA tại CXR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#eef1f5;--card:#fff;--tx:#16233a;--mu:#5d6b82;--bd:#dbe1ea;--bd2:#edf0f5;--pr:#e8590c;--prh:#cf4f0a;--ok:#2b8a3e;--bl:#1c6dc2;--er:#d6336c;--nav:#0d2340;--navtx:#e9eef6;--sel:#0d2340;--seltx:#fff;--sh:0 1px 2px rgba(16,24,40,.05);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d121a;--card:#161d28;--tx:#e6ebf3;--mu:#94a1b6;--bd:#273142;--bd2:#1e2735;--nav:#0a111c;--sel:#e6ebf3;--seltx:#0d121a;--sh:none;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0d121a;--card:#161d28;--tx:#e6ebf3;--mu:#94a1b6;--bd:#273142;--bd2:#1e2735;--nav:#0a111c;--sel:#e6ebf3;--seltx:#0d121a;--sh:none;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:14.5px/1.5 "Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:21;background:var(--nav)}
+#app>p{text-align:center;margin-top:60px}
+#app>.card{max-width:520px;margin:48px auto}
+.pg{max-width:1200px;margin:0 auto;padding:16px}
+h1,h2,h3{letter-spacing:-.01em}h3{margin:0 0 8px;font-size:16px;font-weight:700}
+.mu{color:var(--mu);font-size:13px}
+button,select,input,textarea{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:7px 11px}
+button{cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-weight:500;transition:background-color .15s,border-color .15s,color .15s}
+button:hover{border-color:var(--mu)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--bl);box-shadow:0 0 0 3px rgba(28,109,194,.18)}
+:focus-visible{outline:2px solid var(--bl);outline-offset:2px}
+svg.i{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.pr{background:var(--pr);border-color:var(--pr);color:#fff;font-weight:600}.pr:hover{background:var(--prh);border-color:var(--prh)}
+.dg{color:var(--er)}
+.okb{background:var(--ok);border-color:var(--ok);color:#fff;font-weight:600}.okb:hover{filter:brightness(.94);border-color:var(--ok)}
+.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px 16px;margin-bottom:12px;box-shadow:var(--sh)}
+/* thanh trên */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--nav);color:var(--navtx)}
+.bar-in{max-width:1200px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:11px;min-width:0}
+.logo{width:36px;height:36px;border-radius:9px;background:var(--pr);display:grid;place-items:center;color:#fff;flex:none}.logo svg.i{width:19px;height:19px}
+.brand h1{font-size:16px;font-weight:700;margin:0;line-height:1.2}.brand small{display:block;font-size:12px;opacity:.68;line-height:1.3}
+.bar .btn{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.14);color:var(--navtx)}.bar .btn:hover{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.28)}
+.cnt{background:var(--pr);color:#fff;border-radius:99px;font-size:11px;font-weight:700;padding:0 6px;line-height:17px}
+.um{position:relative}
+.um summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:3px 8px 3px 3px;border-radius:99px;border:1px solid rgba(255,255,255,.14)}
+.um summary::-webkit-details-marker{display:none}.um summary:hover{background:rgba(255,255,255,.08)}
+.av{width:30px;height:30px;border-radius:50%;background:#2c4a70;color:#fff;display:grid;place-items:center;font-size:13px;font-weight:700}
+.who{font-size:13px;line-height:1.2;font-weight:600;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.who small{display:block;font-weight:400;opacity:.7;font-size:11px}
+.menu{position:absolute;right:0;top:calc(100% + 6px);background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:10px;box-shadow:0 10px 28px rgba(10,20,40,.22);padding:6px;min-width:210px;z-index:30}
+.menu button{width:100%;border:0;background:none;justify-content:flex-start;padding:8px 10px;border-radius:7px}.menu button:hover{background:var(--bd2)}
+.menu hr{border:0;border-top:1px solid var(--bd);margin:4px 0}
+/* bố cục */
+.lay{display:grid;grid-template-columns:340px minmax(0,1fr);gap:16px;align-items:start}
+.left{position:sticky;top:calc(env(safe-area-inset-top,0px) + 74px)}
+/* lịch */
+.calh{display:flex;align-items:center;gap:4px;margin-bottom:10px}.calh b{flex:1;text-align:center;font-size:15px}
+.nb{padding:6px;border-color:transparent;background:none}.nb:hover{background:var(--bd2);border-color:transparent}
+.sm{font-size:13px;padding:5px 10px;margin-left:6px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal b{text-align:center;font-size:11.5px;font-weight:600;color:var(--mu);padding:2px 0 4px}
+.d{min-height:44px;min-width:0;padding:4px 2px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:3px;font-size:13px;font-weight:500;border-radius:7px;border:1.5px solid transparent;background:transparent;font-variant-numeric:tabular-nums}
+.d:hover{background:var(--bd2);border-color:transparent}
+.d.today{border-color:var(--bl);background:rgba(28,109,194,.10);font-weight:700}
+.d.sel,.d.sel:hover{background:var(--sel);color:var(--seltx);border-color:var(--sel)}.d.today.sel{border-color:var(--bl)}
+.bd{display:flex;gap:2px;flex-wrap:wrap;justify-content:center;min-height:13px}
+.bd em{font-style:normal;font-size:10px;font-weight:700;line-height:13px;min-width:14px;padding:0 3px;border-radius:4px;color:#fff;text-align:center}
+.bd .note{background:#7a8599}.bd .imp{background:var(--er)}.bd .ck{background:var(--bl)}.bd .tk{background:var(--ok)}
+.legend{display:flex;gap:6px 12px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px solid var(--bd2);font-size:12px;color:var(--mu)}
+.legend i,.st span i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;vertical-align:1px}
+/* đầu ngày */
+.dayh{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.dayh h2{font-size:22px;font-weight:700;margin:0;line-height:1.25}
+.tag{font-size:11.5px;font-weight:600;color:var(--bl);background:rgba(28,109,194,.12);padding:2px 9px;border-radius:99px;margin-left:10px;vertical-align:4px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--bd);border-radius:9px;overflow:hidden}
+.st{padding:10px 14px;border-left:1px solid var(--bd)}.st:first-child{border-left:0}
+.st b{display:block;font-size:24px;font-weight:700;line-height:1.15;font-variant-numeric:tabular-nums}
+.st span{font-size:12.5px;color:var(--mu)}
+/* tìm & lọc */
+.sbox{position:relative;margin-bottom:10px}.sbox svg.i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--mu)}
+.sbox input{width:100%;padding:10px 12px 10px 36px;border-radius:9px}
+.pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.pill{border-radius:99px;padding:5px 14px;font-size:13px}.pill.on,.pill.on:hover{background:var(--sel);color:var(--seltx);border-color:var(--sel)}
+.ss{font-size:12px;padding:3px 9px}
+/* mục */
+.k-imp{border-left:3px solid var(--er)}.k-ck{border-left:3px solid var(--bl)}.k-tk{border-left:3px solid var(--ok)}.k-note{border-left:3px solid #a3adbd}
+.ch{display:flex;justify-content:space-between;align-items:center;gap:8px}.bg{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.b{display:inline-block;padding:2px 8px;border-radius:5px;font-size:11.5px;font-weight:600;border:1px solid var(--bd);color:var(--mu)}
+.b.imp{background:var(--er);border-color:var(--er);color:#fff}.b.note{background:var(--bd2)}.b.ck{background:var(--bl);border-color:var(--bl);color:#fff}.b.tk{background:var(--ok);border-color:var(--ok);color:#fff}
+.main{font-size:16px;font-weight:600;margin:8px 0 4px;line-height:1.45}
+.rt{font-weight:500;color:var(--mu);margin-left:6px}
+.body{color:var(--tx);opacity:.9}
+.ic{display:flex;gap:2px;flex:none}.ic button{border:0;background:none;padding:6px;color:var(--mu);border-radius:6px}.ic button:hover{background:var(--bd2);color:var(--tx)}.ic .del:hover{color:var(--er)}
+.kv{display:grid;grid-template-columns:120px 1fr;gap:5px 12px;font-size:13.5px;margin:10px 0 4px;padding:10px 12px;background:var(--bd2);border-radius:8px}.kv>span:nth-child(odd){color:var(--mu)}
+.pnr{font-weight:700;letter-spacing:.06em}
+.meta{margin-top:10px;font-size:12.5px;color:var(--mu)}
+.prog{width:90px;height:6px;border-radius:99px;background:var(--bd2);overflow:hidden;display:inline-block}.prog i{display:block;height:100%;background:var(--ok)}
+.ack{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:10px}.ack td{padding:7px 0;border-top:1px solid var(--bd2)}.ack td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.warn{border-color:rgba(214,51,108,.35);background:rgba(214,51,108,.06)}
+.wh{display:flex;align-items:center;gap:8px;color:var(--er)}.wh b{color:var(--tx)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{display:inline-block;padding:3px 10px;border-radius:99px;font-size:12.5px;border:1px solid var(--bd);background:var(--card);cursor:pointer}.chip:hover{border-color:var(--er)}
+.lk{border:0;background:none;padding:0 4px;color:var(--bl);font-size:13px}.dl{color:var(--bl);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.wrap{overflow-x:auto}
+/* hộp thoại */
+dialog{border:1px solid var(--bd);border-radius:14px;background:var(--card);color:var(--tx);width:min(560px,94vw);max-height:90vh;padding:20px;box-shadow:0 20px 50px rgba(10,20,40,.3)}
+dialog::backdrop{background:rgba(8,15,30,.55)}
+dialog h3{font-size:18px;margin-bottom:6px}
+label{display:block;font-size:13px;font-weight:500;color:var(--mu);margin:10px 0 4px}
+dialog input,dialog textarea,dialog select{width:100%}textarea{min-height:72px;resize:vertical}
+/* đăng nhập */
+.login{max-width:400px;margin:9vh auto;padding:28px}
+.login .brand{margin-bottom:18px}.login .brand small{opacity:1;color:var(--mu)}.login h1{font-size:18px}
+.login input{width:100%;padding:10px 12px}.login .pr{width:100%;padding:10px;margin-top:16px}
+@media(max-width:860px){.lay{grid-template-columns:1fr}.left{position:static}}
+@media(max-width:720px){.lbl{display:none}.who{display:none}.brand small{display:none}.bar .btn{padding:7px 9px}}
+@media(max-width:520px){.pg{padding:10px}.stats{grid-template-columns:repeat(2,1fr)}.st:nth-child(3){border-left:0}.st:nth-child(n+3){border-top:1px solid var(--bd)}.dayh h2{font-size:19px}.kv{grid-template-columns:96px 1fr}.dayh .row{width:100%;display:grid;grid-template-columns:1fr 1fr}.dayh .row .pr{grid-column:1/-1}.dayh .row button{white-space:nowrap}.bar-in{flex-wrap:nowrap}.bar .row{flex-wrap:nowrap;gap:4px}.brand h1{white-space:nowrap}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style></head><body><div id="app"><p class="mu">Đang tải…</p></div><dialog id="m"></dialog>
+<script>
+const SUPABASE_URL='PASTE_PROJECT_URL_HERE',SUPABASE_ANON_KEY='PASTE_ANON_KEY_HERE';
+const URL_N=SUPABASE_URL.trim().replace(/\/(rest|auth)\/v1.*$/,'').replace(/\/+$/,''),KEY_N=SUPABASE_ANON_KEY.trim().replace(/^['"]|['"]$/g,'');
+const CFG=!SUPABASE_URL.startsWith('PASTE')&&!!window.supabase,sb=CFG?window.supabase.createClient(URL_N,KEY_N):null;
+function viErr(m){m=String(m||'');
+ if(/function.*(schema cache|does not exist)|could not find the function/i.test(m))return'Cơ sở dữ liệu chưa được nâng cấp. Hãy chạy lại toàn bộ schema.sql trong SQL Editor của Supabase.';
+ if(/schema cache|does not exist|relation/i.test(m))return'Chưa tạo bảng dữ liệu. Hãy chạy file schema.sql trong SQL Editor của Supabase.';
+ if(/row-level security|permission denied/i.test(m))return'Bạn không có quyền thực hiện thao tác này (nếu chắc chắn có quyền, hãy nhờ admin chạy lại schema.sql).';
+ if(/rate limit/i.test(m))return'Supabase đang giới hạn số email gửi (do bật Confirm email). Tắt Confirm email trong Authentication → Providers → Email, rồi thử lại sau vài phút.';
+ if(/invalid api key|apikey/i.test(m))return'Sai SUPABASE_ANON_KEY. Kiểm tra lại khóa anon/publishable trong index.html.';
+ if(/failed to fetch|networkerror|load failed/i.test(m))return'Không kết nối được Supabase. Kiểm tra SUPABASE_URL (dạng https://xxxx.supabase.co) và mạng.';
+ if(/signups? not allowed|signup.*disabled/i.test(m))return'Supabase đang tắt đăng ký. Bật “Allow new users to sign up” trong Authentication.';
+ if(/invalid.*email|email.*invalid/i.test(m))return'Email không hợp lệ hoặc bị Supabase từ chối. Hãy dùng email thật.';
+ if(/at least 6|weak/i.test(m))return'Mật khẩu cần tối thiểu 6 ký tự.';
+ if(/already (been )?registered/i.test(m))return'Email này đã đăng ký. Hãy bấm Quay lại đăng nhập.';
+ if(/not confirmed/i.test(m))return'Email chưa được xác nhận. Tắt Confirm email trong Supabase hoặc bấm link trong email.';
+ if(/invalid login/i.test(m))return'Sai email hoặc mật khẩu.';
+ return m}
+const chk=r=>{if(r.error)throw r.error;return r};
+const claude={use:async n=>{
+ if(!CFG)return null;
+ if(n==='downloads')return{save:async({filename,data})=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data]));a.download=filename;document.body.appendChild(a);a.click();a.remove()}};
+ const{data:{session}}=await sb.auth.getSession();if(!session)return null;const u=session.user,nameOf=()=>u.user_metadata?.name||u.email;
+ if(n==='user')return{id:async()=>u.id,me:async()=>({id:u.id,name:nameOf()}),
+  isOwner:async()=>{const{count}=await sb.from('docs').select('*',{count:'exact',head:true}).eq('coll','members');return !count},
+  profiles:async ids=>{const{data}=await sb.from('docs').select('id,data').in('id',ids).in('coll',['members','requests']);const o={};(data||[]).forEach(d=>{if(d.data.name)o[d.id]={name:d.data.name}});if(!o[u.id])o[u.id]={name:nameOf()};return o},
+  search:async()=>[]};
+ if(n==='db')return{collection:c=>({
+  onSnapshot(cb,eb){const load=async()=>{const{data,error}=await sb.from('docs').select('id,data').eq('coll',c);if(error){eb&&eb(error);return}cb({docs:data.map(d=>({id:d.id,data:()=>d.data}))})};
+   load();sb.channel('c_'+c+Math.random().toString(36).slice(2)).on('postgres_changes',{event:'*',schema:'public',table:'docs',filter:'coll=eq.'+c},load).subscribe()},
+  doc:id=>({set:async v=>chk(await sb.from('docs').upsert({coll:c,id,data:v})),
+   update:async v=>{const o=chk(await sb.from('docs').select('data').eq('coll',c).eq('id',id).maybeSingle());if(!o.data)throw new Error('Không tìm thấy mục cần cập nhật');chk(await sb.from('docs').update({data:{...o.data.data,...v}}).eq('coll',c).eq('id',id))},
+   delete:async()=>chk(await sb.from('docs').delete().eq('coll',c).eq('id',id))})})};
+ return null}};
+var signup=false;
+function editMyName(){const p=prompt('Họ tên hiển thị của bạn:',nm(meId));if(p===null)return;sb.rpc('set_my_name',{n:p}).then(x=>x.error&&alert(viErr(x.error.message)))}
+function renameUser(id){if(!can('users'))return;const p=prompt('Họ tên hiển thị:',nm(id));if(p===null||!p.trim())return;db.collection('members').doc(id).update({name:p.trim().slice(0,60)}).catch(e=>alert(viErr(e.message)))}
+function chpw(){const p=prompt('Mật khẩu mới (tối thiểu 6 ký tự):');if(!p)return;sb.auth.updateUser({password:p}).then(x=>alert(x.error?viErr(x.error.message):'Đã đổi mật khẩu.'))}
+function showLogin(){$('#app').innerHTML=!window.supabase?'<div class="card"><h3>Không tải được thư viện Supabase</h3><p>Kiểm tra kết nối mạng hoặc tường lửa đang chặn cdn.jsdelivr.net.</p></div>':!CFG?'<div class="card"><h3>Chưa cấu hình Supabase</h3><p>Mở file index.html, điền <b>SUPABASE_URL</b> và <b>SUPABASE_ANON_KEY</b> ở đầu phần script.</p></div>':`<div class="card login">${BRAND}<label>Tên đăng nhập</label><input id="le" type="text" autocomplete="username" autocapitalize="none"><label>Mật khẩu</label><input id="lp" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doAuth()"><button class="pr" id="ab" onclick="doAuth()">Đăng nhập</button><div id="lm" class="dg" style="margin-top:8px"></div><div class="mu" style="margin-top:14px;font-size:12px;text-align:center">Kết nối: ${esc(URL_N.replace('https://',''))}</div></div>`}
+function swAuth(){signup=!signup;$('#nmw').style.display=signup?'block':'none';$('#sw').textContent=signup?'Quay lại đăng nhập':'Tạo tài khoản';$('#ab').textContent=signup?'Đăng ký':'Đăng nhập'}
+async function doAuth(){const e0=$('#le').value.trim().toLowerCase(),e=e0.includes('@')?e0:e0+'@sogiaoca.app',p=$('#lp').value,m=$('#lm');m.textContent='';
+ if(!e0||!p){m.textContent='Nhập tên đăng nhập và mật khẩu.';return}
+ try{const x=signup?await sb.auth.signUp({email:e,password:p,options:{data:{name:$('#ln').value.trim()||e}}}):await sb.auth.signInWithPassword({email:e,password:p});
+ if(x.error){m.innerHTML=esc(viErr(x.error.message))+'<div class="mu" style="font-size:12px">Chi tiết: '+esc(x.error.message)+'</div>';return}
+ if(signup&&!x.data.session){m.textContent='Đã tạo tài khoản. Nếu không vào được, hãy kiểm tra email để xác nhận (hoặc tắt Confirm email trong Supabase), rồi đăng nhập.';return}
+ location.reload()}catch(err){m.textContent=viErr(err.message)}}
+const sv=p=>`<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`;
+const I={plus:sv('<path d="M12 5v14M5 12h14"/>'),edit:sv('<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>'),trash:sv('<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/>'),
+dl:sv('<path d="M12 3v12M7 10l5 5 5-5M5 21h14"/>'),users:sv('<circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M17 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-4-6.3"/>'),user:sv('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>'),
+key:sv('<circle cx="7.5" cy="15.5" r="4.5"/><path d="M10.7 12.3 21 2M16 7l3 3M18 5l2 2"/>'),out:sv('<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>'),l:sv('<path d="m15 18-6-6 6-6"/>'),r:sv('<path d="m9 18 6-6-6-6"/>'),
+down:sv('<path d="m6 9 6 6 6-6"/>'),search:sv('<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>'),alert:sv('<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/>'),
+check:sv('<path d="M20 6 9 17l-5-5"/>'),book:sv('<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M8 7h8M8 11h6"/>')};
+const ini=s=>{const w=String(s||'?').trim().split(/\s+/);return(w[w.length-1][0]||'?').toUpperCase()};
+const BRAND=`<div class="brand"><div class="logo">${I.book}</div><div><h1>Sổ Giao Ca</h1><small>Sun PhuQuoc Airways · Cam Ranh (CXR)</small></div></div>`;
+document.addEventListener('click',e=>{const u=document.querySelector('.um');if(u&&u.open&&!u.contains(e.target))u.open=false});
+const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const p2=n=>String(n).padStart(2,'0'),ymd=d=>d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
+const vn=s=>s?s.split('-').reverse().join('/'):'';
+const ST=['Mới','Đang xử lý','Hoàn thành','Không thực hiện được'],COL={note:'#e8590c',checkin:'#1971c2',task:'#2b9348'};
+const F={note:[['text','Nội dung lưu ý','ta'],['cat','Phân loại','cat'],['imp','Quan trọng (đánh dấu đỏ)','cb']],
+checkin:[['who','Người nhờ check-in'],['flt','Chuyến bay (VD: 9G123)'],['pnr','PNR'],['route','Chặng bay (VD: SGN-CXR)'],['fdate','Ngày bay','date'],['pax','Đối tượng khách'],['req','Yêu cầu hỗ trợ','ta'],['note','Ghi chú','ta'],['st','Tình trạng','sel'],['asg','Nhân sự thực hiện','mem']],
+task:[['title','Nội dung triển khai'],['body','Chi tiết','ta']]};
+const CAT=['Khai thác / Chuyến bay','Khách đặc biệt (VIP/CIP)','An ninh – An toàn','Hành lý','Thời tiết','Thiết bị / Dịch vụ mặt đất','Khác'];
+const hm=t=>new Date(t).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})+' '+new Date(t).toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit'});
+const PERMS=[['write','Thêm / sửa lưu ý, check-in, triển khai'],['delAny','Xóa mục của người khác'],['export','Xuất Excel'],['users','Thêm / xóa người dùng, đổi role'],['roles','Tạo / sửa / xóa role']];
+let roles={},requests={};
+const rname=r=>r==='admin'?'Admin':r==='member'?'Thành viên':(roles[r]?.name||'Role đã xóa');
+function can(p){const r=members[meId]?.role;if(r==='admin')return true;if(r==='member')return p==='write'||p==='export';return !!roles[r]?.perms?.[p]}
+const TT={note:'Lưu ý',checkin:'Nhờ check-in',task:'Triển khai'};
+let db,user,meId,members={},items=[],names={},day=ymd(new Date()),month=day.slice(0,7),flt='all',q='',stf='',L={m:0,i:0},mode='',boot=0;
+const nm=id=>members[id]?.name||names[id]||'…',isAdm=()=>members[meId]?.role==='admin';
+(async()=>{
+ user=await claude.use('user');db=await claude.use('db');
+ if(!user||!db){showLogin();return}
+ meId=await user.id();
+ db.collection('members').onSnapshot(s=>{members={};s.docs.forEach(d=>members[d.id]=d.data());L.m=1;onMem()},e=>$('#app').innerHTML='<div class="card"><h3>Lỗi dữ liệu</h3><p>'+esc(viErr(e.message))+'</p><div class="mu">Chi tiết: '+esc(e.message)+'</div></div>');
+ db.collection('roles').onSnapshot(s=>{roles={};s.docs.forEach(d=>roles[d.id]=d.data());render();if(mode==='users')usersView();if(mode==='roles')rolesView()});
+ db.collection('requests').onSnapshot(s=>{requests={};s.docs.forEach(d=>requests[d.id]=d.data());render();if(mode==='users')usersView()});
+ db.collection('items').onSnapshot(s=>{items=s.docs.map(d=>({id:d.id,...d.data()}));L.i=1;render()});
+})();
+async function onMem(){
+ if(!Object.keys(members).length&&!boot&&await user.isOwner()){boot=1;try{await db.collection('members').doc(meId).set({role:'admin',name:(await user.me()).name,at:Date.now()})}catch(e){$('#app').innerHTML='<div class="card"><h3>Không tạo được Admin đầu tiên</h3><p>'+esc(viErr(e.message))+'</p><div class="mu">Chi tiết: '+esc(e.message)+'</div></div>'}return}
+ render();if(mode==='users')usersView();
+}
+function need(){const ids=new Set([meId,...Object.keys(members),...items.map(i=>i.asg),...items.map(i=>i.by)]);return[...ids].filter(i=>i&&!names[i])}
+async function loadNames(a){const p=await user.profiles(a);a.forEach(i=>names[i]=p[i]?.name||members[i]?.name||'Thành viên');render();if(mode==='users')usersView()}
+const WD=['Chủ Nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'],FL=[['all','Tất cả'],['note','Lưu ý'],['checkin','Check-in'],['task','Triển khai'],['imp','Quan trọng']];
+const today=()=>ymd(new Date());
+function render(){
+ if(!L.m||!L.i)return;const n=need();if(n.length)loadNames(n);
+ const app=$('#app');
+ if(!members[meId]){const rq=requests[meId];app.innerHTML=`<header class="bar"><div class="bar-in">${BRAND}<button class="btn" onclick="sb.auth.signOut().then(()=>location.reload())">${I.out}<span class="lbl">Đăng xuất</span></button></div></header><div class="card" style="max-width:520px;margin:48px auto"><h3>Chưa được cấp quyền</h3><p>${rq?'Yêu cầu của bạn đã được gửi. Vui lòng chờ admin duyệt.':'Tài khoản của bạn chưa có trong danh sách người dùng của Sổ Giao Ca.'}</p>${rq?'':'<button class="pr" onclick="reqAccess()">Gửi yêu cầu truy cập</button>'}</div>`;return}
+ const [Y,M]=month.split('-').map(Number),off=(new Date(Y,M-1,1).getDay()+6)%7,dim=new Date(Y,M,0).getDate(),td=today(),c={};
+ items.forEach(i=>{if(i.date?.startsWith(month)){const o=c[i.date]??={note:0,checkin:0,task:0,imp:0};o[i.type]++;if(i.imp)o.imp++}});
+ let g=['T2','T3','T4','T5','T6','T7','CN'].map(x=>`<b>${x}</b>`).join('')+'<span></span>'.repeat(off);
+ for(let d=1;d<=dim;d++){const ds=`${month}-${p2(d)}`,o=c[ds],tt=o?`${o.note} lưu ý, ${o.checkin} check-in, ${o.task} triển khai${o.imp?', '+o.imp+' quan trọng':''}`:'Chưa có việc';
+  g+=`<button class="d ${ds===day?'sel':''} ${ds===td?'today':''}" title="${tt}" onclick="pick('${ds}')"><span>${d}</span><span class="bd">${o?[['note',o.imp?'imp':'note'],['checkin','ck'],['task','tk']].filter(([t])=>o[t]).map(([t,k])=>`<em class="${k}">${o[t]}</em>`).join(''):''}</span></button>`}
+ const di=items.filter(i=>i.date===day),cnt=t=>di.filter(i=>i.type===t).length,ni=di.filter(i=>i.imp).length,
+ qs=norm(q.trim()),base=qs?items.filter(i=>norm(txt(i)).includes(qs)):di,
+ byT=base.filter(i=>flt==='all'||(flt==='imp'?i.imp:i.type===flt)),
+ list=byT.filter(i=>!(flt==='checkin'&&stf)||(i.st||ST[0])===stf).sort(qs?(a,b)=>b.date.localeCompare(a.date)||(!!b.imp-!!a.imp)||b.at-a.at:(a,b)=>(!!b.imp-!!a.imp)||a.at-b.at),
+ dd=new Date(day+'T00:00:00'),w=can('write'),since=ymd(new Date(Date.now()-60*864e5)),
+ pend=items.filter(i=>i.type==='task'&&!(i.ack||{})[meId]&&i.date<=td&&i.date>=since&&(i.at||0)>=(members[meId].at||0)).sort((a,b)=>b.date.localeCompare(a.date)),
+ fq=document.activeElement?.id==='q',cs=fq?document.activeElement.selectionStart:0;
+ const pc=Object.keys(requests).filter(id=>!members[id]).length,mn=nm(meId),uo=$('.um')?.open;
+ app.innerHTML=`<header class="bar"><div class="bar-in">${BRAND}
+ <div class="row">${can('export')?`<button class="btn" onclick="exportXls('day')" title="Xuất Excel ngày đang chọn">${I.dl}<span class="lbl">Excel ngày</span></button><button class="btn" onclick="exportXls('month')" title="Xuất Excel cả tháng">${I.dl}<span class="lbl">Excel tháng</span></button>`:''}${can('users')||can('roles')?`<button class="btn" onclick="openUsers()" title="Người dùng">${I.users}<span class="lbl">Người dùng</span>${can('users')&&pc?`<span class="cnt" title="${pc} yêu cầu chờ duyệt">${pc}</span>`:''}</button>`:''}
+ <details class="um"${uo?' open':''}><summary title="Tài khoản"><span class="av">${esc(ini(mn))}</span><span class="who">${esc(mn)}<small>${esc(rname(members[meId].role))}</small></span>${I.down}</summary><div class="menu"><button onclick="editMyName()">${I.user}Đổi họ tên</button><button onclick="chpw()">${I.key}Đổi mật khẩu</button><hr><button class="dg" onclick="sb.auth.signOut().then(()=>location.reload())">${I.out}Đăng xuất</button></div></details></div></div></header>
+ <main class="pg"><div class="lay"><aside class="left"><div class="card"><div class="calh"><button class="nb" onclick="mv(-1)" aria-label="Tháng trước">${I.l}</button><b>Tháng ${M}/${Y}</b><button class="nb" onclick="mv(1)" aria-label="Tháng sau">${I.r}</button><button class="sm" onclick="pick(today())">Hôm nay</button></div>
+ <div class="cal">${g}</div><div class="legend"><span><i style="background:#7a8599"></i>Lưu ý</span><span><i style="background:var(--bl)"></i>Check-in</span><span><i style="background:var(--ok)"></i>Triển khai</span><span><i style="background:var(--er)"></i>Có mục quan trọng</span></div></div></aside>
+ <section>${pend.length?`<div class="card warn"><div class="wh">${I.alert}<b>Bạn còn ${pend.length} triển khai chưa xác nhận</b></div><div class="chips">${pend.slice(0,6).map(i=>`<span class="chip" onclick="pick('${i.date}');flt='task';render()">${vn(i.date).slice(0,5)} – ${esc(i.title||'Triển khai')}</span>`).join('')}${pend.length>6?`<span class="mu" style="align-self:center">và ${pend.length-6} mục khác</span>`:''}</div></div>`:''}
+ <div class="card"><div class="dayh"><h2>${WD[dd.getDay()]}, ${vn(day)}${day===td?'<span class="tag">Hôm nay</span>':''}</h2>${w?`<div class="row"><button class="pr" onclick="openForm('note')">${I.plus}Thêm ghi chú</button><button onclick="openForm('checkin')">${I.plus}Check-in</button><button onclick="openForm('task')">${I.plus}Triển khai</button></div>`:''}</div>
+ <div class="stats"><div class="st"><b>${cnt('note')}</b><span><i style="background:#7a8599"></i>Lưu ý</span></div><div class="st"><b style="color:var(--bl)">${cnt('checkin')}</b><span><i style="background:var(--bl)"></i>Check-in</span></div><div class="st"><b style="color:var(--ok)">${cnt('task')}</b><span><i style="background:var(--ok)"></i>Triển khai</span></div><div class="st"><b style="color:var(--er)">${ni}</b><span><i style="background:var(--er)"></i>Quan trọng</span></div></div></div>
+ <div class="sbox">${I.search}<input id="q" type="search" placeholder="Tìm chuyến bay, PNR, người nhờ, nội dung… (mọi ngày)" value="${esc(q)}" oninput="q=this.value;render()"></div>
+ <div class="pills">${FL.map(([k,l])=>`<button class="pill ${k===flt?'on':''}" onclick="flt='${k}';stf='';render()">${l}</button>`).join('')}</div>
+ ${flt==='checkin'?`<div class="pills">${[['','Mọi tình trạng'],...ST.map(s=>[s,s])].map(([k,l])=>`<button class="pill ss ${k===stf?'on':''}" onclick="stf='${k}';render()">${l} (${byT.filter(i=>!k||(i.st||ST[0])===k).length})</button>`).join('')}</div>`:''}
+ ${qs?`<div class="mu" style="margin-bottom:10px">Tìm thấy ${list.length} mục trên mọi ngày${list.length>100?' (hiện 100 mục mới nhất)':''} · <span class="dl" onclick="q='';render()">Xóa tìm kiếm</span></div>`:''}
+ ${list.length?list.slice(0,qs?100:1e4).map(i=>card(i,!!qs)).join(''):`<div class="card mu" style="text-align:center;padding:28px">${qs?'Không tìm thấy mục phù hợp. Thử từ khóa khác.':(w?'Chưa có mục nào trong ngày. Bấm “Thêm ghi chú” để bắt đầu.':'Chưa có mục nào trong ngày.')}</div>`}</section></div></main>`;
+ if(fq){const e=$('#q');e.focus();try{e.setSelectionRange(cs,cs)}catch(_){}}
+}
+function pick(d){day=d;month=d.slice(0,7);q='';render()}
+const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d');
+const txt=i=>[i.text,i.cat,i.who,i.flt,i.pnr,i.route,i.pax,i.req,i.note,i.title,i.body,i.st,i.asg&&nm(i.asg),nm(i.by)].join(' ');
+function mv(k){const[Y,M]=month.split('-').map(Number),d=new Date(Y,M-1+k,1);month=ymd(d).slice(0,7);day=month+'-01';render()}
+function card(i,sd){
+ const cn=can('delAny')||(can('write')&&i.by===meId),a=i.ack||{},mk=Object.keys(members),
+ act=`<div class="ic">${can('write')?`<button title="Sửa" aria-label="Sửa" onclick="openForm('${i.type}','${i.id}')">${I.edit}</button>`:''}${cn?`<button class="del" title="Xóa" aria-label="Xóa" onclick="del('${i.id}')">${I.trash}</button>`:''}</div>`,
+ meta=`<div class="meta">${sd?`<span class="dl" onclick="pick('${i.date}')">${vn(i.date)}</span> · `:''}${esc(nm(i.by))} · ${new Date(i.at).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit',hour12:false})}</div>`;
+ if(i.type==='note')return`<div class="card ${i.imp?'k-imp':'k-note'}"><div class="ch"><div class="bg">${i.imp?'<span class="b imp">Quan trọng</span>':'<span class="b note">Ghi chú</span>'}<span class="mu">${esc(i.cat||CAT[0])}</span></div>${act}</div><div class="main">${esc(i.text).replace(/\n/g,'<br>')}</div>${meta}</div>`;
+ if(i.type==='checkin'){const kv=[['PNR',i.pnr?`<span class="pnr">${esc(i.pnr)}</span>`:''],['Người nhờ',esc(i.who)],['Ngày bay',vn(i.fdate)],['Đối tượng',esc(i.pax)],['Yêu cầu',esc(i.req).replace(/\n/g,'<br>')],['Ghi chú',esc(i.note).replace(/\n/g,'<br>')],['Thực hiện',i.asg?esc(nm(i.asg)):'<span class="mu">Chưa phân công</span>']].filter(x=>x[1]);
+ return`<div class="card k-ck"><div class="ch"><div class="bg"><span class="b ck">Check-in</span><select class="ss" ${can('write')?'':'disabled'} onchange="setSt('${i.id}',this.value)" aria-label="Tình trạng">${ST.map(s=>`<option ${s===(i.st||ST[0])?'selected':''}>${s}</option>`).join('')}</select></div>${act}</div>
+ <div class="main">${esc(i.flt)||'—'}${i.route?`<span class="rt">${esc(i.route)}</span>`:''}</div><div class="kv">${kv.map(([k,v])=>`<span>${k}</span><span>${v}</span>`).join('')}</div>${meta}</div>`}
+ const n=mk.filter(u=>a[u]).length,pct=mk.length?Math.round(n*100/mk.length):0;
+ return`<div class="card k-tk"><div class="ch"><div class="bg"><span class="b tk">Triển khai</span><span class="prog" title="${pct}%"><i style="width:${pct}%"></i></span><span class="mu">${n}/${mk.length} đã xác nhận</span></div>${act}</div><div class="main">${esc(i.title)}</div>${i.body?`<div class="body">${esc(i.body).replace(/\n/g,'<br>')}</div>`:''}
+ <div class="wrap"><table class="ack">${mk.map(u=>`<tr><td>${esc(nm(u))}</td><td style="color:${a[u]?'var(--ok)':'var(--mu)'}">${a[u]?'✓ '+hm(a[u]):'Chưa xác nhận'}</td></tr>`).join('')}</table></div>
+ <div class="row" style="margin-top:10px"><button class="${a[meId]?'':'okb'}" onclick="ack('${i.id}')">${a[meId]?'Bỏ xác nhận':I.check+'Tôi đã nắm &amp; xác nhận'}</button></div>${meta}</div>`}
+const get=id=>items.find(i=>i.id===id);
+function setSt(id,v){db.collection('items').doc(id).update({st:v}).catch(e=>{alert(viErr(e.message));render()})}
+function ack(id){sb.rpc('toggle_ack',{item_id:id}).then(x=>x.error&&alert(viErr(x.error.message)))}
+function del(id){if(confirm('Xóa mục này?'))db.collection('items').doc(id).delete().catch(e=>alert(viErr(e.message)))}
+function openForm(type,id){
+ mode='form';const o=id?get(id):{},m=$('#m');
+ m.innerHTML=`<h3>${id?'Sửa':'Thêm'} ${TT[type].toLowerCase()} – ${vn(o.date||day)}</h3>`+F[type].map(([k,l,t])=>{
+  const v=o[k]??(k==='fdate'?day:'');let f;
+  if(t==='ta')f=`<textarea id="f_${k}">${esc(v)}</textarea>`;
+  else if(t==='cb')f=`<input type="checkbox" id="f_${k}" ${v?'checked':''} style="width:auto">`;
+  else if(t==='sel')f=`<select id="f_${k}">${ST.map(s=>`<option ${s===(v||ST[0])?'selected':''}>${s}</option>`).join('')}</select>`;
+  else if(t==='cat')f=`<select id="f_${k}">${CAT.map(s=>`<option ${s===(v||CAT[0])?'selected':''}>${s}</option>`).join('')}</select>`;
+  else if(t==='mem')f=`<select id="f_${k}"><option value="">— Chưa phân công —</option>${Object.keys(members).map(u=>`<option value="${u}" ${u===v?'selected':''}>${esc(nm(u))}</option>`).join('')}</select>`;
+  else f=`<input id="f_${k}" type="${t||'text'}" value="${esc(v)}">`;
+  return`<label>${l}</label>${f}`}).join('')+`<div class="row" style="margin-top:12px;justify-content:flex-end"><button onclick="$('#m').close()">Hủy</button><button class="pr" onclick="save('${type}','${id||''}')">Lưu</button></div>`;
+ m.onclose=()=>mode='';m.showModal();
+}
+async function save(type,id){
+ const v={};F[type].forEach(([k,,t])=>{const e=$('#f_'+k);v[k]=t==='cb'?e.checked:e.value.trim()});
+ if(!v[F[type][0][0]]&&!(type==='checkin'&&v.flt)){alert('Vui lòng nhập nội dung.');return}
+ const o=id?get(id):{},nid=id||'i'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+ const{id:_x,...old}=o;
+ try{if(id)await db.collection('items').doc(id).update({...v,type});else await db.collection('items').doc(nid).set({...v,type,date:day,by:meId,at:Date.now(),ack:{}});$('#m').close()}catch(e){alert('Không lưu được: '+viErr(e.message||e.code))}
+}
+function openUsers(){mode='users';const m=$('#m');m.onclose=()=>mode='';usersView();if(!m.open)m.showModal()}
+const roleOpts=sel=>[['member','Thành viên'],...(isAdm()||sel==='admin'?[['admin','Admin']]:[]),...Object.entries(roles).map(([k,v])=>[k,v.name])].map(([k,n])=>`<option value="${k}" ${k===sel?'selected':''}>${esc(n)}</option>`).join('');
+function usersView(){
+ mode='users';const ids=Object.keys(members),cu=can('users'),pend=Object.entries(requests).filter(([id])=>!members[id]);
+ $('#m').innerHTML=`<div class="top" style="margin:0"><h3>Người dùng (${ids.length})</h3>${can('roles')?'<button onclick="rolesView()">Quản lý role</button>':''}</div>`
+ +(cu&&pend.length?`<label style="color:var(--er)">Yêu cầu chờ duyệt (${pend.length})</label>`+pend.map(([id,q])=>`<div class="row" style="justify-content:space-between;margin:4px 0"><span>${esc(q.name||'Người dùng mới')}</span><span class="row"><select id="rq_${id}" style="width:auto">${roleOpts('member')}</select><button class="pr" onclick="approve('${id}')">Duyệt</button><button class="dg" onclick="rejectReq('${id}')">Từ chối</button></span></div>`).join(''):'')
+ +'<label>Danh sách hiện tại</label>'+ids.map(u=>{const ro=members[u].role,lock=!cu||u===meId||(ro==='admin'&&!isAdm());
+  return`<div class="row" style="justify-content:space-between;margin:4px 0"><span>${esc(nm(u))}${u===meId?' (bạn)':''}${cu?`<button class="lk" title="Sửa họ tên" onclick="renameUser('${u}')">${I.edit}</button>`:''}</span><span class="row"><select onchange="setRole('${u}',this.value)" ${lock?'disabled':''}>${roleOpts(ro)}</select>${lock?'':`<button class="dg" onclick="rmUser('${u}')">Xóa</button>`}</span></div>`}).join('')
+ +(cu?`<div class="mu" style="margin-top:10px">Thêm người mới: tạo tài khoản trong Supabase → Authentication → Users → Add user (email <tên>@sogiaoca.app, chọn Auto Confirm). Người đó đăng nhập, bấm “Gửi yêu cầu truy cập”, yêu cầu sẽ hiện ở mục chờ duyệt phía trên. Bấm biểu tượng bút để sửa họ tên.</div>`:'')
+ +`<div class="row" style="margin-top:12px;justify-content:flex-end"><button onclick="$('#m').close()">Đóng</button></div>`;
+}
+let tm;function srch(q){clearTimeout(tm);tm=setTimeout(async()=>{const box=$('#res');if(!box)return;
+ try{const r=(await user.search(q)).filter(p=>!members[p.id]&&!p.isMe);r.forEach(p=>names[p.id]=p.name);
+ box.innerHTML=r.length?r.map(p=>`<div class="row" style="justify-content:space-between;margin:4px 0"><span>${esc(p.name)} <span class="mu">${esc(p.email||'')}</span></span><button class="pr" onclick="addUser('${p.id}')">Thêm</button></div>`).join(''):'<div class="mu">Không tìm thấy ai. Hãy dùng cách gửi link và duyệt yêu cầu ở trên.</div>'}
+ catch(e){box.innerHTML='<div class="dg">Lỗi tìm kiếm: '+esc(e.message||e.code)+'</div>'}},250)}
+async function addUser(id){if(!can('users'))return;try{await db.collection('members').doc(id).set({role:$('#nr')?.value||'member',name:names[id]||'',at:Date.now()})}catch(e){alert('Không thêm được: '+(e.message||e.code))}}
+async function reqAccess(){try{const me=await user.me();await db.collection('requests').doc(meId).set({name:me.name||'',at:Date.now()})}catch(e){alert('Không gửi được yêu cầu: '+(e.message||e.code))}}
+async function approve(id){if(!can('users'))return;try{await db.collection('members').doc(id).set({role:$('#rq_'+id)?.value||'member',name:requests[id]?.name||'',at:Date.now()});await db.collection('requests').doc(id).delete()}catch(e){alert('Không duyệt được: '+(e.message||e.code))}}
+function rejectReq(id){if(can('users'))db.collection('requests').doc(id).delete()}
+function setRole(id,r){if(!can('users'))return;if(members[id].role==='admin'&&r!=='admin'&&Object.values(members).filter(m=>m.role==='admin').length<2){alert('Cần có ít nhất 1 Admin.');usersView();return}db.collection('members').doc(id).update({role:r})}
+function rmUser(id){if(!can('users')||(members[id].role==='admin'&&!isAdm()))return;if(confirm('Xóa người dùng này khỏi sổ?'))db.collection('members').doc(id).delete()}
+function rolesView(){mode='roles';$('#m').innerHTML=`<h3>Quản lý role</h3><div class="mu">Mọi role đều xem được sổ và xác nhận triển khai. Admin (toàn quyền) và Thành viên (thêm/sửa mục, xuất Excel) là role mặc định, không sửa được.</div>`
+ +Object.entries(roles).map(([k,v])=>`<div class="card" style="margin-top:8px"><b>${esc(v.name)}</b> <span class="mu">(${Object.values(members).filter(m=>m.role===k).length} người)</span><div class="mu">${PERMS.filter(p=>v.perms?.[p[0]]).map(p=>p[1]).join(' · ')||'Chỉ xem & xác nhận'}</div><div class="row" style="margin-top:6px"><button onclick="roleForm('${k}')">Sửa</button><button class="dg" onclick="delRole('${k}')">Xóa</button></div></div>`).join('')
+ +`<div class="row" style="margin-top:10px;justify-content:space-between"><button class="pr" onclick="roleForm()">＋ Tạo role mới</button><button onclick="openUsers()">‹ Quay lại</button></div>`}
+function roleForm(id){mode='roleform';const o=id?roles[id]:{};$('#m').innerHTML=`<h3>${id?'Sửa':'Tạo'} role</h3><label>Tên role (VD: Trưởng ca)</label><input id="rn" value="${esc(o.name||'')}"><label>Quyền hạn</label>`
+ +PERMS.map(([k,l])=>`<label style="display:flex;gap:8px;align-items:center;color:var(--tx)"><input type="checkbox" id="p_${k}" ${o.perms?.[k]?'checked':''} style="width:auto"> ${l}</label>`).join('')
+ +`<div class="row" style="margin-top:12px;justify-content:flex-end"><button onclick="rolesView()">Hủy</button><button class="pr" onclick="saveRole('${id||''}')">Lưu</button></div>`}
+async function saveRole(id){if(!can('roles'))return;const name=$('#rn').value.trim();if(!name){alert('Nhập tên role.');return}const perms={};PERMS.forEach(([k])=>perms[k]=$('#p_'+k).checked);
+ await db.collection('roles').doc(id||'r'+Date.now().toString(36)).set({name,perms});rolesView()}
+function delRole(id){if(!can('roles')||!confirm('Xóa role này? Người dùng thuộc role sẽ chuyển thành "Thành viên".'))return;Object.entries(members).forEach(([u,m])=>{if(m.role===id)db.collection('members').doc(u).update({role:'member'})});db.collection('roles').doc(id).delete()}
+async function exportXls(sc){
+ if(!can('export'))return;
+ const dl=await claude.use('downloads');if(!dl){alert('Không hỗ trợ tải file ở chế độ này.');return}
+ const isD=sc==='day',mi=items.filter(i=>isD?i.date===day:i.date?.startsWith(month)).sort((a,b)=>a.date.localeCompare(b.date)||a.at-b.at),wb=XLSX.utils.book_new(),ty=t=>mi.filter(i=>i.type===t),mk=Object.keys(members);
+ const add=(n,h,r,w)=>{const s=XLSX.utils.aoa_to_sheet([h,...r]);s['!cols']=h.map((_,k)=>({wch:w?.[k]||22}));XLSX.utils.book_append_sheet(wb,s,n)};
+ const [Y,M]=month.split('-'),N=ty('note'),C=ty('checkin'),T=ty('task'),who=[...new Set([...mk,...mi.map(i=>i.by)])].filter(Boolean);
+ add('Thống kê',[isD?'Ngày':'Tháng',isD?vn(day):`${M}/${Y}`,'',''],[[],['Loại','Số lượng'],['Lưu ý',N.length],['  trong đó Quan trọng',N.filter(i=>i.imp).length],['Nhờ check-in',C.length],['Triển khai',T.length],[],
+  ['Lưu ý theo phân loại','Số lượng'],...CAT.map(c=>[c,N.filter(i=>(i.cat||CAT[0])===c).length]),[],
+  ['Check-in theo tình trạng','Số lượng'],...ST.map(t=>[t,C.filter(i=>(i.st||ST[0])===t).length]),[],
+  ['Người ghi','Lưu ý','Check-in','Triển khai'],...who.map(u=>[nm(u),N.filter(i=>i.by===u).length,C.filter(i=>i.by===u).length,T.filter(i=>i.by===u).length]),[],
+  ['Xác nhận triển khai','Đã xác nhận','Tổng triển khai','Tỷ lệ'],...mk.map(u=>{const k=T.filter(i=>(i.ack||{})[u]).length;return[nm(u),k,T.length,T.length?Math.round(k*100/T.length)+'%':'']})],[30,14,16,10]);
+ add('Lưu ý',['Ngày','Phân loại','Quan trọng','Nội dung','Người ghi'],N.map(i=>[vn(i.date),i.cat||CAT[0],i.imp?'Có':'',i.text,nm(i.by)]));
+ add('Nhờ check-in',['Ngày','Người nhờ','Chuyến bay','PNR','Chặng bay','Ngày bay','Đối tượng khách','Yêu cầu hỗ trợ','Ghi chú','Tình trạng','Nhân sự thực hiện','Người ghi'],C.map(i=>[vn(i.date),i.who,i.flt,i.pnr||'',i.route,vn(i.fdate),i.pax,i.req,i.note,i.st||ST[0],i.asg?nm(i.asg):'',nm(i.by)]));
+ add('Triển khai',['Ngày','Nội dung','Chi tiết','Đã xác nhận','Chưa xác nhận'],T.map(i=>{const a=i.ack||{};return[vn(i.date),i.title,i.body,mk.filter(u=>a[u]).map(u=>nm(u)+' ('+hm(a[u])+')').join('; '),mk.filter(u=>!a[u]).map(nm).join(', ')]}));
+ try{await dl.save({filename:`SoGiaoCa_SPA_CXR_${isD?day:month}.xlsx`,data:XLSX.write(wb,{bookType:'xlsx',type:'array'})})}catch(e){if(e.code!=='declined')alert('Không xuất được: '+(e.message||e.code))}
+}
+</script></body></html>
